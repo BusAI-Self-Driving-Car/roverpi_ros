@@ -9,24 +9,17 @@ from std_msgs.msg import Int32
 
 from motor_driver import MotorDriver
 
+
 class RoverpiController:
 
-    '''
-    GPIO PORTS
-    '''
-    in1 = 20
-    in2 = 21
-    in3 = 23
-    in4 = 24
-    ena = 25
-    enb = 12
-
-    def __init__(self, diameter=0.66):
+    def __init__(self, robot_width=0.16, diameter=0.066, rmp_to_pwm_gain=0.15):
+        self.robot_width = robot_width
         self.diameter = diameter
+        self.rmp_to_pwm_gain = rmp_to_pwm_gain
         self.vel_x = 0.0
         self.vel_th = 0.0
 
-        self.cmd_vel_sub = rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
+        self.cmd_vel_sub = rospy.Subscriber("cmd_vel", Twist, self.cmd_vel_callback)
 
         self.lwheel_pub = rospy.Publisher('lwheel_rpm', Int32, queue_size=1)
         self.rwheel_pub = rospy.Publisher('rwheel_rpm', Int32, queue_size=1)
@@ -45,18 +38,18 @@ class RoverpiController:
         self.previous_time = rospy.get_time()
         while not rospy.is_shutdown():
 
-            if (rospy.get_rostime() - self.last_set_speed_time).to_sec() > 1:
+            if rospy.get_time() - self.previous_time > 1:
                 rospy.loginfo("Did not get command for 1 second, stopping")
                 try:
                     self.motor.e_stop()
-                    self.left_wheel_pub.publish(0)
-                    self.right_wheel_pub.publish(0)
+                    self.lwheel_pub.publish(0)
+                    self.rwheel_pub.publish(0)
                 except OSError as e:
                     rospy.logerr("Could not stop")
                     rospy.logdebug(e)
 
             if self.vel_x == 0:
-                right_vel = self.vel_th * width_robot / 2.0
+                right_vel = self.vel_th * self.robot_width / 2.0
                 left_vel = -right_vel
             elif vel_th == 0:
                 left_vel = right_vel = self.vel_x
@@ -70,10 +63,10 @@ class RoverpiController:
             self.lwheel_pub.publish(RPMleft)
             self.rwheel_pub.publish(RPMright)
 
-            PWMleft = k * RPMleft
-            PWMright = k * RPMright
-            self.motor.left_wheel(100, PWMleft)
-            self.motor.right_wheel(100, PWMright)
+            PWMleft = self.rmp_to_pwm_gain * RPMleft
+            PWMright = self.rmp_to_pwm_gain * RPMright
+            self.motor.left_wheel(100, 1500)
+            self.motor.right_wheel(100, 1500)
 
             rate.sleep()
 
@@ -84,6 +77,7 @@ def main():
 
     controller = RoverpiController()
     controller.run()
+    controller.motor.exit()
 
 if __name__ == '__main__':
     try:
