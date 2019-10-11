@@ -73,26 +73,28 @@ class RoverpiController:
                 self.lwheel_pub.publish(RPMleft)
                 self.rwheel_pub.publish(RPMright)
 
+                addon = 30.0 # dc to be added
+
                 if RPMleft > 0 and RPMright > 0:
-                    self.rmp_to_pwm_gain = 50.0 / (RPMleft + RPMright)
+                    self.rmp_to_pwm_gain = addon / (RPMleft + RPMright)
                     PWMleft = 50 + self.rmp_to_pwm_gain * RPMleft
                     PWMright = 50 + self.rmp_to_pwm_gain * RPMright
                     self.motor.left_wheel(PWMleft, 1000)
                     self.motor.right_wheel(PWMright, 1000)
                 elif RPMleft < 0 and RPMright < 0:
-                    self.rmp_to_pwm_gain = - 50.0 / (RPMleft + RPMright)
+                    self.rmp_to_pwm_gain = - addon / (RPMleft + RPMright)
                     PWMleft = 50 + self.rmp_to_pwm_gain * -RPMleft
                     PWMright = 50 + self.rmp_to_pwm_gain * -RPMright
                     self.motor.left_wheel(PWMleft, 1000, reverse=True)
                     self.motor.right_wheel(PWMright, 1000, reverse=True)
                 elif RPMleft > 0 and RPMright < 0:
-                    self.rmp_to_pwm_gain = 50.0 / (RPMleft - RPMright)
+                    self.rmp_to_pwm_gain = addon / (RPMleft - RPMright)
                     PWMleft = 50 + self.rmp_to_pwm_gain * RPMleft
                     PWMright = 50 + self.rmp_to_pwm_gain * -RPMright
                     self.motor.left_wheel(PWMleft, 1000)
                     self.motor.right_wheel(PWMright, 1000, reverse=True)
                 elif RPMleft < 0 and RPMright > 0:
-                    self.rmp_to_pwm_gain = 50.0 / (-RPMleft + RPMright)
+                    self.rmp_to_pwm_gain = addon / (-RPMleft + RPMright)
                     PWMleft = 50 + self.rmp_to_pwm_gain * -RPMleft
                     PWMright = 50 + self.rmp_to_pwm_gain * RPMright
                     self.motor.left_wheel(PWMleft, 1000, reverse=True)
