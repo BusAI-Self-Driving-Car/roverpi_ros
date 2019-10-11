@@ -1,0 +1,9 @@
+<launch>
+  <!-- Bring up robot and enable wheel odometer publishing "/odom"-->
+  <include file="$(find roverpi_controller)/launch/roverpi_bring_up.launch" />
+
+  <!-- Bring up rplidar and publish "/scan" -->
+  <include file="$(find crazylidar_node)/launch/crazylidar.launch" />
+
+  <include file="$(find roverpi_demo)/launch/gmapping.launch" />
+</launch>
