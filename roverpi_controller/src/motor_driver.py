@@ -80,16 +80,24 @@ class MotorDriver:
         self.pa.ChangeFrequency(freq)
         self.pb.ChangeFrequency(freq)
 
-    def left_wheel(self, dc=100, freq=1500):
-        GPIO.output(in1, GPIO.HIGH)
-        GPIO.output(in2, GPIO.LOW)
+    def left_wheel(self, dc=100, freq=1500, reverse=False):
+        if not reverse:
+            GPIO.output(in1, GPIO.HIGH)
+            GPIO.output(in2, GPIO.LOW)
+        else:
+            GPIO.output(in1, GPIO.LOW)
+            GPIO.output(in2, GPIO.HIGH)
 
         self.pa.ChangeDutyCycle(dc)
         self.pa.ChangeFrequency(freq)
 
-    def right_wheel(self, dc=100, freq=1500):
-        GPIO.output(in3, GPIO.LOW)
-        GPIO.output(in4, GPIO.HIGH)
+    def right_wheel(self, dc=100, freq=1500, reverse=False):
+        if not reverse:
+            GPIO.output(in3, GPIO.HIGH)
+            GPIO.output(in4, GPIO.LOW)
+        else:
+            GPIO.output(in3, GPIO.LOW)
+            GPIO.output(in4, GPIO.HIGH)
 
         self.pb.ChangeDutyCycle(dc)
         self.pb.ChangeFrequency(freq)

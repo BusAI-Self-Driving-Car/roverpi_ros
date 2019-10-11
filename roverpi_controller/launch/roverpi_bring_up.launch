@@ -1,0 +1,4 @@
+<launch>
+  <node name="roverpi_controller" pkg="roverpi_controller" type="roverpi_controller.py" />
+  <node name="roverpi_odometry" pkg="roverpi_controller" type="odometry.py" />
+</launch>

@@ -17,9 +17,11 @@ class RoverpiOdometry:
         self.vx = 0.0
         self.vy = 0.0
         self.vth = 0.0
+        self.vx_max = 1.0
+        self.vth_max = 1.0
 
-        self.left_wheel_sub = rospy.Subscriber("lwheel_ticks", Int32, self.left_callback)
-        self.right_wheel_sub = rospy.Subscriber("rwheel_ticks", Int32, self.right_callback)
+        self.left_wheel_sub = rospy.Subscriber("lwheel_rpm", Int32, self.left_callback)
+        self.right_wheel_sub = rospy.Subscriber("rwheel_rpm", Int32, self.right_callback)
         self.initial_pose_sub = rospy.Subscriber("initialpose", PoseWithCovarianceStamped, self.on_initial_pose)
         self.cmd_vel_sub = rospy.Subscriber("cmd_vel", Twist, self.cmd_vel_callback)
 
@@ -29,6 +31,8 @@ class RoverpiOdometry:
         self.current_time = rospy.Time.now()
         self.previous_time = rospy.Time.now()
 
+        self.last_cmd_time = None
+
     def on_initial_pose(self, msg):
         q = [msg.pose.pose.orientation.x,
              msg.pose.pose.orientation.x,
@@ -36,16 +40,20 @@ class RoverpiOdometry:
              msg.pose.pose.orientation.w]
         roll, pitch, yaw = euler_from_quaternion(q)
 
+        self.x = msg.pose.pose.position.x
+        self.y = msg.pose.pose.position.y
+        self.th = yaw
+
     def left_callback(self, msg):
-        pass
+        print("Left Wheel RPM = %d", msg.data)
 
     def right_callback(self, msg):
-        pass
+        print("Right Wheel RPM = %d", msg.data)
 
     def cmd_vel_callback(self, msg):
-        vx = msg.linear.x
-        vy = msg.linear.y
-        vth = msg.angular.z
+        self.vx = max(min(msg.linear.x, self.vx_max), -self.vx_max)
+        self.vth = max(min(msg.angular.z, self.vth_max), -self.vth_max)
+        self.last_cmd_time = rospy.Time.now()
 
     def run(self):
 
@@ -54,16 +62,19 @@ class RoverpiOdometry:
         while not rospy.is_shutdown():
             self.current_time = rospy.Time.now()
 
-            # compute odometry in a typical way given the velocities of the robot
-            dt = (self.current_time - self.previous_time).to_sec()
+            if self.last_cmd_time == None or (self.current_time - self.last_cmd_time).to_sec() > 1.0:
+                rospy.loginfo("Did not get command for 1 second, stopping")
+            else:
+                # compute odometry in a typical way given the velocities of the robot
+                dt = (self.current_time - self.previous_time).to_sec()
 
-            delta_x = (self.vx * cos(self.th) - self.vy * sin(self.th)) * dt
-            delta_y = (self.vx * sin(self.th) + self.vy * cos(self.th)) * dt
-            delta_th = self.vth * dt
+                delta_x = (self.vx * cos(self.th) - self.vy * sin(self.th)) * dt
+                delta_y = (self.vx * sin(self.th) + self.vy * cos(self.th)) * dt
+                delta_th = self.vth * dt
 
-            self.x += delta_x
-            self.y += delta_y
-            self.th += delta_th
+                self.x += delta_x
+                self.y += delta_y
+                self.th += delta_th
 
             # create quaternion from yaw
             odom_quat = quaternion_from_euler(0, 0, self.th)
