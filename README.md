@@ -2,7 +2,7 @@
 
 # Dependencies
 
-- crazy_lidar
+- rplidar
 - laser_scan_matcher
 - openslam_gmapping
 - slam_gmapping

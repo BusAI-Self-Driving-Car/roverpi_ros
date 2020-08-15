@@ -73,7 +73,7 @@ class RoverpiController:
                 self.lwheel_pub.publish(RPMleft)
                 self.rwheel_pub.publish(RPMright)
 
-                addon = 30.0 # dc to be added
+                addon = 50.0 # dc to be added
 
                 if RPMleft > 0 and RPMright > 0:
                     self.rmp_to_pwm_gain = addon / (RPMleft + RPMright)
